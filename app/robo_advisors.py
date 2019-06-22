@@ -2,6 +2,9 @@
 import requests
 import json 
 import datetime
+import csv
+import os
+
 request_url = "http://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=MSFT&apikey=demo"
 
 response = requests.get(request_url)
@@ -9,6 +12,24 @@ response = requests.get(request_url)
 #print (response.status_code)
 #print(response.text)
 #
+#valid_ids = [str(p["id"]) for p in products] # doing comparisons with string versions of these ids
+#total_price = 0 
+#selected_ids = []
+#
+#while True:
+#    selected_id = input("Please input a product identifier, or 'DONE': " ) # the data input will always be a str
+#
+#   if selected_id == "DONE":
+#       break # stops the loop
+#   elif str(selected_id) in valid_ids:
+#       selected_ids.append(selected_id)
+#   else:
+#       print("Detected invalid input! Please try again...")
+     
+#print ("SELECTED PRODUCTS:" )
+
+
+
 
 def to_usd(my_price):
     return "${0:,.2f}".format(my_price)
@@ -32,6 +53,18 @@ for date in dates:
 recent_high = max(high_prices)
 recent_low = min(low_prices)
 
+csv_file_path = os.path.join(os.path.dirname(__file__),"..","data","prices.csv")
+
+#"data/prices.csv" # a relative filepath
+
+with open(csv_file_path, "w") as csv_file: # "w" means "open the file for writing"
+    writer = csv.DictWriter(csv_file, fieldnames=["city", "name"])
+    writer.writeheader() # uses fieldnames set above
+    writer.writerow({"city": "New York", "name": "Yankees"})
+    writer.writerow({"city": "New York", "name": "Mets"})
+    writer.writerow({"city": "Boston", "name": "Red Sox"})
+    writer.writerow({"city": "New Haven", "name": "Ravens"})
+
 print("-------------------------")
 print("SELECTED SYMBOL: XYZ")
 print("-------------------------")
@@ -46,6 +79,9 @@ print("-------------------------")
 print("RECOMMENDATION: BUY!")
 print("RECOMMENDATION REASON: TODO")
 print("-------------------------")
+print(f"WRITING DATA TO CSV: {csv_file_path}...")
+print("-------------------------")
+
 print("HAPPY INVESTING!")
 print("-------------------------")
 
