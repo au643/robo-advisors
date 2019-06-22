@@ -4,8 +4,15 @@ import json
 import datetime
 import csv
 import os
+from dotenv import load_dotenv
 
-request_url = "http://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=MSFT&apikey=demo"
+load_dotenv() #> loads contents of the .env file into the script's environment
+
+
+api_key = os.environ.get("ALPHAVANTAGE_API_KEY")
+symbol = "MSFT"
+
+request_url = f"http://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={symbol}&apikey={api_key}"
 
 response = requests.get(request_url)
 #print (type(response))
