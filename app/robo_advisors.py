@@ -8,94 +8,91 @@ from dotenv import load_dotenv
 
 load_dotenv() #> loads contents of the .env file into the script's environment
 
+symbol = input("Please specify a stock symbol (e.g. AMZN) and press enter: ")
 
-api_key = os.environ.get("ALPHAVANTAGE_API_KEY")
-symbol = "MSFT"
+while True:
+    if (len(str(symbol)))>5: 
+       print("Detected invalid input! Please try again...")
+       quit()
+    elif not symbol.isalpha():
+       print("Detected invalid input! Please try again...")
+       # https://stackoverflow.com/questions/36432954/python-validation-to-ensure-input-only-contains-characters-a-z
+       quit()
+    else:
+        break
+API_KEY = os.environ.get("ALPHAVANTAGE_API_KEY")
+def get_response(symbol):
+    request_url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={symbol}&apikey={API_KEY}"
+    response = requests.get(request_url)
+    parsed_response = json.loads(response.text)
+    return parsed_response
 
-request_url = f"http://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={symbol}&apikey={api_key}"
+def transform_response(parsed_response):
+    tsd = parsed_response["Time Series (Daily)"]
 
-response = requests.get(request_url)
-#print (type(response))
-#print (response.status_code)
-#print(response.text)
-#
-#valid_ids = [str(p["id"]) for p in products] # doing comparisons with string versions of these ids
-#total_price = 0 
-#selected_ids = []
-#
-#while True:
-#    selected_id = input("Please input a product identifier, or 'DONE': " ) # the data input will always be a str
-#
-#   if selected_id == "DONE":
-#       break # stops the loop
-#   elif str(selected_id) in valid_ids:
-#       selected_ids.append(selected_id)
-#   else:
-#       print("Detected invalid input! Please try again...")
-     
-#print ("SELECTED PRODUCTS:" )
+    rows = []
+    for date, daily_prices in tsd.items(): 
+        row = {
+            "timestamp": date,
+            "open": float(daily_prices["1. open"]),
+            "high": float(daily_prices["2. high"]),
+            "low": float(daily_prices["3. low"]),
+            "close": float(daily_prices["4. close"]),
+            "volume": int(daily_prices["5. volume"])
+        }
+        rows.append(row)
 
+    return rows
 
+def write_to_csv(rows, csv_filepath):
+    csv_headers = ["timestamp", "open", "high", "low", "close", "volume"]
 
+    with open(csv_filepath, "w") as csv_file:
+        writer = csv.DictWriter(csv_file, fieldnames=csv_headers)
+        writer.writeheader() 
+        for row in rows:
+            writer.writerow(row)
+
+    return True
 
 def to_usd(my_price):
     return "${0:,.2f}".format(my_price)
 
-parsed_response = json.loads(response.text)
-tsd = parsed_response ["Time Series (Daily)"]
-dates = list(tsd.keys())
-latest_day = dates [0]
+if __name__ == "__main__":
 
-last_refreshed = parsed_response["Meta Data"]["3. Last Refreshed"]
-latest_close = parsed_response["Time Series (Daily)"][latest_day]["4. close"]
-now = datetime.datetime.now()
+    time_now = datetime.datetime.now()
+    parsed_response = get_response(symbol)
 
-high_prices = []
-low_prices = []
-for date in dates:
-    high_price = tsd[date]["2. high"]
-    high_prices.append(float(high_price))
-    low_price = tsd[date]["3. low"]
-    low_prices.append(float(low_price))
-recent_high = max(high_prices)
-recent_low = min(low_prices)
+    last_refreshed = parsed_response["Meta Data"]["3. Last Refreshed"]
 
-csv_file_path = os.path.join(os.path.dirname(__file__),"..","data","prices.csv")
+    rows = transform_response(parsed_response)
 
-csv_headers = ["timestamp", "open", "high", "low", "close", "volume"]
-
-with open(csv_file_path, "w") as csv_file: # "w" means "open the file for writing"
-    writer = csv.DictWriter(csv_file, fieldnames=csv_headers)
-    writer.writeheader() # uses fieldnames set above
-    for date in dates:
-        daily_prices = tsd[date]
-        writer.writerow({
-            "timestamp": date,
-            "open": daily_prices["1. open"],
-            "high":daily_prices["2. high"],
-            "low":daily_prices["3. low"],
-            "close":daily_prices["4. close"],
-            "volume":daily_prices["5. volume"],
-            })
+    latest_close = rows[0]["close"]
+    high_prices = [row["high"] for row in rows] 
+    low_prices = [row["low"] for row in rows] 
+    recent_high = max(high_prices)
+    recent_low = min(low_prices)
 
 
-print("-------------------------")
-print("SELECTED SYMBOL: XYZ")
-print("-------------------------")
-print("REQUESTING STOCK MARKET DATA...")
-print("REQUEST AT: " + str(now.strftime("%Y-%m-%d %H:%M:%S")))
-print("-------------------------")
-print(f"LATEST DAY: {last_refreshed}")
-print(f"LATEST CLOSE:  {to_usd(float(latest_close))}")
-print(f"RECENT HIGH: {to_usd(float(recent_high))}")
-print(f"RECENT LOW: {to_usd(float(recent_low))}")
-print("-------------------------")
-print("RECOMMENDATION: BUY!")
-print("RECOMMENDATION REASON: TODO")
-print("-------------------------")
-print(f"WRITING DATA TO CSV: {csv_file_path}...")
-print("-------------------------")
+    csv_filepath = os.path.join(os.path.dirname(__file__), "..", "data", "prices.csv")
 
-print("HAPPY INVESTING!")
-print("-------------------------")
+    write_to_csv(rows, csv_filepath)
 
+
+    formatted_time_now = time_now.strftime("%Y-%m-%d %H:%M:%S") 
+    formatted_csv_filepath = csv_filepath.split("..")[1] 
+    print("-------------------------")
+    print(f"SYMBOL: {symbol}")
+    print("-------------------------")
+    print(f"REQUEST AT: {formatted_time_now}")
+    print(f"REFRESH DATE: {last_refreshed}")
+    print("-------------------------")
+    print(f"RECENT HIGH:  {to_usd(recent_high)}")
+    print(f"LATEST CLOSE: {to_usd(latest_close)}")
+    print(f"RECENT LOW:   {to_usd(recent_low)}")
+    print("-------------------------")
+    print("RECOMMENDATION: TODO") # TODO
+    print("BECAUSE: TODO") # TODO
+    print(f"WRITING DATA TO CSV: {formatted_csv_filepath}")
+    print("-------------------------")
+    print("HAPPY INVESTING!")
