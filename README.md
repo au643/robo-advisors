@@ -49,17 +49,20 @@ If you get it back, you're all set to start!!
 
 #todoIt also includes instructions for setting an environment variable named ALPHAVANTAGE_API_KEY (see "Security Requirements" section below).
 
-import below modules:
+import below:
 
 import response - pull the data from the html
 import json - parse the response text from a string into a dictionary
 import datetime - find the request time
 import csv - write data to csv file
 import os - create a file path that can be used across mac / window
+from dotenv import load_dotenv - to access your secret API
 
 
 API Key setup: 
 Create a file called .env after installing the dotenv package -  Example ".env" contents:
 
 ALPHAVANTAGE_API_KEY="abc123"
+
+You should be good to start!
 
