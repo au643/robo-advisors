@@ -58,6 +58,21 @@ def write_to_csv(rows, csv_filepath):
 def to_usd(my_price):
     return "${0:,.2f}".format(my_price)
 
+def buy_sell(recent_low, recent_high):
+        if float(recent_low) < 0.5*float(recent_high): 
+            return("Don't Buy")
+            #break
+        else:
+            return ("Buy")
+            #break
+
+def WHY(recent_low, recent_high):
+        if float(recent_low) < 0.5*float(recent_high): 
+            return("Stock is too volatile")
+            #break
+        else:
+            return ("Stock is stable, may provide steady returns")
+            #break
 if __name__ == "__main__":
 
     time_now = datetime.datetime.now()
@@ -77,8 +92,9 @@ if __name__ == "__main__":
     csv_filepath = os.path.join(os.path.dirname(__file__), "..", "data", "prices.csv")
 
     write_to_csv(rows, csv_filepath)
-
-
+    Recommendation = buy_sell(recent_low, recent_high)
+    Reason = WHY(recent_low, recent_high)
+    
     formatted_time_now = time_now.strftime("%Y-%m-%d %H:%M:%S") 
     formatted_csv_filepath = csv_filepath.split("..")[1] 
     print("-------------------------")
@@ -91,8 +107,8 @@ if __name__ == "__main__":
     print(f"LATEST CLOSE: {to_usd(latest_close)}")
     print(f"RECENT LOW:   {to_usd(recent_low)}")
     print("-------------------------")
-    print("RECOMMENDATION: TODO") # TODO
-    print("BECAUSE: TODO") # TODO
+    print(f"RECOMMENDATION: {Recommendation}") 
+    print(f"BECAUSE: {Reason}")
     print(f"WRITING DATA TO CSV: {formatted_csv_filepath}")
     print("-------------------------")
     print("HAPPY INVESTING!")
